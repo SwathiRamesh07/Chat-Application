@@ -1,0 +1,10 @@
+.messages {
+  display: flex;
+  flex-direction: column;
+  overflow-y: scroll;
+  scrollbar-width: none;
+}
+
+.animation .Lottie{
+  border-radius: 20px;
+}
