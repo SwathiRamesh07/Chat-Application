@@ -1,46 +1,5 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
-
-# =========================
-# Common dependencies
-# =========================
+/node_modules
 node_modules/
-**/node_modules/
-
-# =========================
-# Testing
-# =========================
-coverage/
-
-# =========================
-# Production builds
-# =========================
-build/
-**/build/
-dist/
-**/dist/
-
-# =========================
-# Environment files
-# =========================
+/frontend1/node_modules/
 .env
-.env.*
-**/.env
-**/.env.*
-
-# =========================
-# System & Editor files
-# =========================
-.DS_Store
-Thumbs.db
-
-# =========================
-# Logs
-# =========================
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# =========================
-# PnP
-# =========================
-.pnp.*
+/frontend/.env/
