@@ -16,7 +16,7 @@ import { toast } from "react-toastify";
 import UserListItem from "../UserAvatar/UserListItem";
 import UserBadgeItem from "../UserAvatar/UserBadgeItem";
 
-const GroupChatModal = ({ children }) => {
+const GroupChatModal = ({ children,props }) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [groupChatName, setGroupChatName] = useState();
   const [selectedUsers, setSelectedUsers] = useState([]);
@@ -69,7 +69,10 @@ const GroupChatModal = ({ children }) => {
         },
         config
       );
-      setChats([data, ...chats]);
+      //setChats([data, ...chats]);
+       if (props.onChatCreated) {
+      props.onChatCreated(data); // <-- This line triggers update in MyChats
+    }
       onClose();
       toast.success("New Group Chat Created!");
     } catch (error) {

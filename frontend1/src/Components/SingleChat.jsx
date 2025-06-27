@@ -1,17 +1,27 @@
-import { Box, IconButton, Text, Spinner, Field, Input } from "@chakra-ui/react";
+import {
+  Box,
+  IconButton,
+  Text,
+  Spinner,
+  Field,
+  Input,
+  Flex,
+} from "@chakra-ui/react";
 import { ChatState } from "../Context/ChatProvider";
 import { MdArrowBack } from "react-icons/md";
 import { getSender, getSenderFull } from "../Config/ChatLogics";
 import ProfileModal from "./miscellaneous/ProfileModal";
 import UpdateGroupChatModal from "./miscellaneous/UpdateGroupChatModal";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
 import ScrollableChat from "./ScrollableChat.jsx";
 import io from "socket.io-client";
 import Lottie from "react-lottie";
 import animationData from "../Animations/typing.json";
+import decryptMessage from "../utils/decryptMessage.js";
 import "./styles.css";
+import { IoMdSend } from "react-icons/io";
 
 const ENDPOINT = "http://localhost:5000";
 var socket, selectedChatCompare;
@@ -19,11 +29,12 @@ var socket, selectedChatCompare;
 const SingleChat = ({ fetchAgain, setFetchAgain }) => {
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [newMessage, setNewMessage] = useState();
+  const [newMessage, setNewMessage] = useState("");
   const [socketConnected, setSocketConnected] = useState(false);
   const [typing, setTyping] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
-
+  const [editingId, setEditingId] = useState(null);
+  const inputRef = useRef(null);
   const defaultOptions = {
     loop: true,
     autoplay: true,
@@ -33,6 +44,13 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
     },
   };
 
+  const startEdit = (msg) => {
+    setEditingId(msg._id);
+    setNewMessage(decryptMessage(msg.content));
+    socket.emit("stop typing", selectedChat._id); // no typing indicator yet
+    // slight delay so the ref is mounted
+    setTimeout(() => inputRef.current?.focus(), 0);
+  };
   const { selectedChat, setSelectedChat, user, notification, setNotification } =
     ChatState();
 
@@ -43,6 +61,8 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
 
     socket.on("typing", () => setIsTyping(true));
     socket.on("stop typing", () => setIsTyping(false));
+
+    return () => socket.disconnect();
   }, []);
 
   useEffect(() => {
@@ -65,15 +85,24 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
       }
     });
 
-    // ✅ Listen for deleted messages
+    // Listen for deleted messages
     socket.on("message deleted", ({ messageId }) => {
       setMessages((prevMessages) =>
         prevMessages.filter((message) => message._id !== messageId)
       );
     });
 
+    // Edited message
+    socket.on("message edited", (editedMsg) => {
+      setMessages((prev) =>
+        prev.map((m) => (m._id === editedMsg._id ? editedMsg : m))
+      );
+    });
+
     // Clean up
     return () => {
+      socket.off("message recieved");
+      socket.off("message edited");
       socket.off("message deleted");
     };
   }, []);
@@ -104,8 +133,35 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
   };
 
   const sendMessage = async (event) => {
+    if (!newMessage || !newMessage.trim()) return;
     if (event.key === "Enter" && newMessage) {
       socket.emit("stop typing", selectedChat._id);
+
+      if (editingId) {
+        /* ---- UPDATE existing message ---- */
+        try {
+          const { data } = await axios.put(
+            `/api/message/${editingId}`,
+            { content: newMessage },
+            {
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${user.token}`,
+              },
+            }
+          );
+          setMessages((prev) =>
+            prev.map((m) => (m._id === data._id ? data : m))
+          );
+          socket.emit("message edited", data);
+          setEditingId(null);
+          setNewMessage("");
+        } catch (err) {
+          toast.error("Edit failed");
+        }
+        return;
+      }
+
       try {
         const config = {
           headers: {
@@ -183,6 +239,31 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
     }
   };
 
+  const editMessage = async (messageId, newContent) => {
+    if (!newContent.trim()) return; // ignore empty edits
+
+    try {
+      const { data } = await axios.put(
+        `http://localhost:5000/api/message/${messageId}`,
+        { content: newContent },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${user.token}`,
+          },
+        }
+      );
+
+      // optimistic local update
+      setMessages((prev) => prev.map((m) => (m._id === data._id ? data : m)));
+
+      // tell everyone else
+      socket.emit("message edited", data);
+    } catch (err) {
+      toast.error("Edit failed");
+    }
+  };
+
   return (
     <>
       {selectedChat ? (
@@ -245,11 +326,13 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
                 <ScrollableChat
                   messages={messages}
                   onDeleteMessage={deleteMessage}
+                  onEditMessage={editMessage}
+                  onStartEdit={startEdit}
                 />
               </div>
             )}
 
-            <Field.Root onKeyDown={sendMessage} marginTop={3} required>
+            {/* <Field.Root onKeyDown={sendMessage} marginTop={3} required>
               {isTyping ? (
                 <div>
                   <Lottie
@@ -263,12 +346,47 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
                 <></>
               )}
               <Input
-                variant={"subtle"}
-                background={"#E0E0E0"}
-                placeholder="Enter a message..."
+                ref={inputRef} //  hook up the ref
+                variant="subtle"
+                background="#E0E0E0"
+                placeholder={editingId ? "Edit message…" : "Enter a message…"}
                 onChange={typingHandler}
                 value={newMessage}
               />
+            </Field.Root> */}
+
+            <Field.Root onKeyDown={sendMessage} mt={3} required>
+              {isTyping && (
+                <Lottie
+                  options={defaultOptions}
+                  height={40}
+                  width={71}
+                  style={{ marginBottom: 15, marginLeft: 0 }}
+                />
+              )}
+
+              <Flex w="100%" gap={2} align="center">
+                <Input
+                  ref={inputRef}
+                  flex="1"
+                  variant="subtle"
+                  bg="#E0E0E0"
+                  placeholder={editingId ? "Edit message…" : "Enter a message…"}
+                  onChange={typingHandler}
+                  value={newMessage}
+                  onKeyDown={sendMessage}
+                />
+
+                <IconButton
+                  size="sm"
+                  colorScheme="teal"
+                  aria-label="Send"
+                  isDisabled={!newMessage || !newMessage.trim()}
+                  onClick={() => sendMessage({ key: "Enter" })}
+                >
+                  <IoMdSend />
+                </IconButton>
+              </Flex>
             </Field.Root>
           </Box>
         </>

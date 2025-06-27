@@ -13,7 +13,7 @@ import { TiDelete } from "react-icons/ti";
 import { MdEdit } from "react-icons/md";
 import decryptMessage from "../utils/decryptMessage";
 
-const ScrollableChat = ({ messages, onDeleteMessage }) => {
+const ScrollableChat = ({ messages, onDeleteMessage, onStartEdit }) => {
   const { user } = ChatState();
   const id = useId();
 
@@ -74,30 +74,40 @@ const ScrollableChat = ({ messages, onDeleteMessage }) => {
                 cursor="pointer"
                 display="inline-block"
               >
-                <Menu.Root>
-                  <Menu.Trigger w="100%" textAlign="left">
+                {isOwnMessage ? (
+                  <Menu.Root>
+                    <Menu.Trigger
+                      w="100%"
+                      textAlign="left"
+                      _focus={{ outline: "none" }}
+                    >
+                      {decryptMessage(m.content)}
+                    </Menu.Trigger>
+
+                    <Portal>
+                      <Menu.Positioner>
+                        <Menu.Content>
+                          <Menu.Item
+                            color="red"
+                            onClick={() => onDeleteMessage(m._id)}
+                          >
+                            Delete
+                            <TiDelete />
+                          </Menu.Item>
+
+                          <Menu.Item onClick={() => onStartEdit(m)}>
+                            Edit
+                            <MdEdit />
+                          </Menu.Item>
+                        </Menu.Content>
+                      </Menu.Positioner>
+                    </Portal>
+                  </Menu.Root>
+                ) : (
+                  <Box w="100%" textAlign="left">
                     {decryptMessage(m.content)}
-                  </Menu.Trigger>
-                  <Portal>
-                    <Menu.Positioner>
-                      <Menu.Content>
-                        <Menu.Item
-                          color="red"
-                          onClick={() => onDeleteMessage(m._id)}
-                        >
-                          Delete
-                          <TiDelete />
-                        </Menu.Item>
-                        <Menu.Item
-                          onClick={() => alert("Update message logic here")}
-                        >
-                          Edit
-                          <MdEdit />
-                        </Menu.Item>
-                      </Menu.Content>
-                    </Menu.Positioner>
-                  </Portal>
-                </Menu.Root>
+                  </Box>
+                )}
               </Box>
 
               {/* <span

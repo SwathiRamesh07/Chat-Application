@@ -42,6 +42,8 @@ const io = require("socket.io")(server, {
   },
 });
 
+app.set("io", io); 
+
 io.on("connection", (socket) => {
   console.log("connected to socket.io");
   // Connection
@@ -76,8 +78,6 @@ io.on("connection", (socket) => {
     // Broadcast to everyone in the chat room *except* the sender
     socket.to(chatId).emit("message deleted", { messageId });
   });
-
-
 
   // Disconnection
   socket.off("setup", () => {
