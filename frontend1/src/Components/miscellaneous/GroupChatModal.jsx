@@ -16,7 +16,7 @@ import { toast } from "react-toastify";
 import UserListItem from "../UserAvatar/UserListItem";
 import UserBadgeItem from "../UserAvatar/UserBadgeItem";
 
-const GroupChatModal = ({ children,props }) => {
+const GroupChatModal = ({ children, props }) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [groupChatName, setGroupChatName] = useState();
   const [selectedUsers, setSelectedUsers] = useState([]);
@@ -41,7 +41,7 @@ const GroupChatModal = ({ children,props }) => {
       };
 
       const { data } = await axios.get(`/api/user?search=${search}`, config);
-      console.log(data);
+
       setLoading(false);
       setSearchResult(data);
     } catch (error) {
@@ -69,14 +69,17 @@ const GroupChatModal = ({ children,props }) => {
         },
         config
       );
-      //setChats([data, ...chats]);
-       if (props.onChatCreated) {
-      props.onChatCreated(data); // <-- This line triggers update in MyChats
-    }
+      setChats([data, ...chats]);
       onClose();
+      if (props?.onChatCreated) {
+        props.onChatCreated(data); // <-- This line triggers update in MyChats
+      }
+
       toast.success("New Group Chat Created!");
     } catch (error) {
-      toast.error("Failed to Create the Chat!");
+      toast.error(
+        error.response?.data?.message || "Failed to Create the Chat!"
+      );
     }
   };
 

@@ -68,7 +68,6 @@
 
 // export default signupSaga;
 
-
 import { call, put, takeLatest } from "redux-saga/effects";
 import axios from "axios";
 import {
@@ -107,7 +106,7 @@ function* handleSignup(action) {
   try {
     const config = {
       headers: {
-        "Content-Type": "application/json", // ✅ FIX: Key should be in quotes
+        "Content-Type": "application/json", // FIX: Key should be in quotes
       },
     };
 
@@ -129,7 +128,7 @@ function* handleSignup(action) {
     localStorage.setItem("userInfo", JSON.stringify(data));
     yield put(signupSuccess(data));
 
-    // ✅ Navigate to chats page → this will trigger fetching user's chats
+    //  Navigate to chats page  this will trigger fetching user's chats
     navigate("/chats");
   } catch (error) {
     toast.error("Signup Failed");

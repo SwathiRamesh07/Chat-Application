@@ -43,17 +43,20 @@ const Signup = () => {
     if (pic instanceof File) {
       const formData = new FormData();
       formData.append("file", pic);
-      formData.append("upload_preset", "Chat-app");
-      formData.append("cloud_name", "dvuo1pg4j");
+      formData.append(
+        "upload_preset",
+        process.env.REACT_APP_CLOUDINARY_UPLOAD_PRESET
+      );
+      formData.append(
+        "cloud_name",
+        process.env.REACT_APP_CLOUDINARY_CLOUD_NAME
+      );
 
       try {
-        const res = await fetch(
-          "https://api.cloudinary.com/v1_1/dvuo1pg4j/image/upload",
-          {
-            method: "POST",
-            body: formData,
-          }
-        );
+        const res = await fetch(process.env.REACT_APP_CLOUDINARY_UPLOAD_URL, {
+          method: "POST",
+          body: formData,
+        });
 
         const data = await res.json();
         imageUrl = data.url.toString(); //  Get URL from Cloudinary

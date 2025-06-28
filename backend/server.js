@@ -42,7 +42,7 @@ const io = require("socket.io")(server, {
   },
 });
 
-app.set("io", io); 
+app.set("io", io);
 
 io.on("connection", (socket) => {
   console.log("connected to socket.io");

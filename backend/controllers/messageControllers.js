@@ -92,9 +92,8 @@ const deleteMessage = async (req, res) => {
 };
 
 const updateMessage = asyncHandler(async (req, res) => {
-  console.log("PUT /api/message/:id payload →", req.params.id, req.body);
+ // console.log("PUT /api/message/:id payload →", req.params.id, req.body);
 
-  
   const { content } = req.body; // plaintext from client
   const message = await Message.findById(req.params.id);
 

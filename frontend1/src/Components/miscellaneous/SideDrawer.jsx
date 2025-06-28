@@ -28,6 +28,7 @@ import UserListItem from "../UserAvatar/UserListItem.jsx";
 import { getSender } from "../../Config/ChatLogics.jsx";
 import NotificationBadge from "react-notification-badge";
 import { Effect } from "react-notification-badge";
+import EditProfileModal from "./EditProfileModal.jsx";
 const SideDrawer = () => {
   const [search, setSearch] = useState("");
   const [searchResults, setSearchResults] = useState([]);
@@ -242,6 +243,17 @@ const SideDrawer = () => {
                       My Profile
                     </Box>
                   </ProfileModal>
+
+                  <EditProfileModal
+                    user={user}
+                    onUpdate={(updateduser) => {
+                      localStorage.setItem(
+                        "userInfo",
+                        JSON.stringify(updateduser)
+                      );
+                      window.location.reload(); // reload to reflect changes in avatar etc.
+                    }}
+                  ></EditProfileModal>
 
                   <Menu.Item
                     onClick={logoutHandler}

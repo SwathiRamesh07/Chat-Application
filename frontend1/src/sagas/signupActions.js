@@ -1,4 +1,4 @@
-export const SIGNUP_TRIGGER = 'signup/SIGNUP_TRIGGER';
+export const SIGNUP_TRIGGER = "signup/SIGNUP_TRIGGER";
 
 export const signupTrigger = (payload) => ({
   type: SIGNUP_TRIGGER,
