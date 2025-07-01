@@ -70,17 +70,15 @@ const fetchChats = asyncHandler(async (req, res) => {
 
 const createGroupChat = asyncHandler(async (req, res) => {
   if (!req.body.users || !req.body.name) {
-    return res.status(400).send({ message: "Please Fill all the feilds" });
+    return res.status(400).send({ message: "Please Fill all the fields" });
   }
-  var users = JSON.parse(req.body.users);
 
+  let users = JSON.parse(req.body.users);
   if (users.length < 2) {
-    return res
-      .status(400)
-      .send("More than 2 users are required to form a group chat");
+    return res.status(400).send("More than 2 users are required to form a group chat");
   }
 
-  users.push(req.user); //all users + corrent user logged in
+  users.push(req.user); // add the creator to the users list
 
   try {
     const groupChat = await Chat.create({
@@ -93,6 +91,14 @@ const createGroupChat = asyncHandler(async (req, res) => {
     const fullGroupChat = await Chat.findOne({ _id: groupChat._id })
       .populate("users", "-password")
       .populate("groupAdmin", "-password");
+
+    // Emit to each user using Socket.IO
+    const io = req.app.get("io"); // Get the Socket.IO instance
+    fullGroupChat.users.forEach((u) => {
+      if (u._id.toString() !== req.user._id.toString()) {
+        io.to(u._id.toString()).emit("group-chat-created", fullGroupChat);
+      }
+    });
 
     res.status(200).json(fullGroupChat);
   } catch (error) {

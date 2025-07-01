@@ -8,6 +8,7 @@ import ChatLoading from "./ChatLoading";
 import { getSender } from "../Config/ChatLogics";
 import GroupChatModal from "./miscellaneous/GroupChatModal";
 import decryptMessage from "../utils/decryptMessage";
+
 const MyChats = ({ fetchAgain }) => {
   const [loggedUser, setLoggedUser] = useState();
   const { selectedChat, setSelectedChat, user, chats, setChats } = ChatState();
@@ -111,17 +112,6 @@ const MyChats = ({ fetchAgain }) => {
                     })()}
                   </Text>
                 )}
-
-                {/* {chat.latestMessage && (
-                  <Text fontSize="xs">
-                    <b>{chat.latestMessage.sender.name} : </b>
-                    {decryptMessage(
-                      chat.latestMessage.content.length > 50
-                        ? chat.latestMessage.content.substring(0, 51) + "..."
-                        : chat.latestMessage.content
-                    )}
-                  </Text>
-                )} */}
               </Box>
             ))}
           </Stack>

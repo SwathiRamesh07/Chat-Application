@@ -6,7 +6,7 @@ const SECRET_KEY = process.env.MESSAGE_SECRET || "default-secret-key";
 const encrypt = (text) => {
   return CryptoJS.AES.encrypt(text, SECRET_KEY).toString();
 };
-console.log("Backend SECRET_KEY:", SECRET_KEY);
+
 // // Decrypt
 // const decrypt = (cipherText) => {
 //   const bytes = CryptoJS.AES.decrypt(cipherText, SECRET_KEY);
