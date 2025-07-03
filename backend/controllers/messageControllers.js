@@ -7,20 +7,21 @@ const Chat = require("../Models/ChatModel");
 const { encrypt } = require("../Utils/encryption");
 
 const sendMessage = asyncHandler(async (req, res) => {
-  const { content, chatId } = req.body;
+  const { content, chatId, fileUrl, fileType } = req.body;
 
-  if (!content || !chatId) {
+  if (!chatId || (!content && !fileUrl)) {
     console.log("Invalid data passed into request");
     return res.sendStatus(400);
   }
 
-  // Encrypt the message content before storing
-  const encryptedContent = encrypt(content);
+  const encryptedContent = content ? encrypt(content) : "";
 
   var newMessage = {
     sender: req.user._id,
     content: encryptedContent,
     chat: chatId,
+    fileUrl: fileUrl || null,
+    fileType: fileType || null,
   };
 
   try {
@@ -33,10 +34,7 @@ const sendMessage = asyncHandler(async (req, res) => {
       select: "name pic email",
     });
 
-    //   Decrypt before sending back to frontend
-    //  message.content = decrypt(message.content);
-
-    await Chat.findByIdAndUpdate(req.body.chatId, { latestMessage: message });
+    await Chat.findByIdAndUpdate(chatId, { latestMessage: message });
 
     res.json(message);
   } catch (error) {
@@ -92,7 +90,7 @@ const deleteMessage = async (req, res) => {
 };
 
 const updateMessage = asyncHandler(async (req, res) => {
- // console.log("PUT /api/message/:id payload →", req.params.id, req.body);
+  // console.log("PUT /api/message/:id payload →", req.params.id, req.body);
 
   const { content } = req.body; // plaintext from client
   const message = await Message.findById(req.params.id);

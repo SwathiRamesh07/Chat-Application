@@ -22,6 +22,7 @@ import animationData from "../Animations/typing.json";
 import decryptMessage from "../utils/decryptMessage.js";
 import "./styles.css";
 import { IoMdSend } from "react-icons/io";
+import { IoAttach } from "react-icons/io5";
 
 const ENDPOINT = "http://localhost:5000";
 var socket, selectedChatCompare;
@@ -34,6 +35,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
   const [typing, setTyping] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
   const [editingId, setEditingId] = useState(null);
+  const [selectedFile, setSelectedFile] = useState(null);
   const inputRef = useRef(null);
   const defaultOptions = {
     loop: true,
@@ -142,7 +144,9 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
         try {
           const { data } = await axios.put(
             `/api/message/${editingId}`,
-            { content: newMessage },
+            {
+              content: newMessage,
+            },
             {
               headers: {
                 "Content-Type": "application/json",
@@ -175,6 +179,8 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
           {
             content: newMessage,
             chatId: selectedChat,
+            fileUrl: selectedFile?.url || "",
+            fileType: selectedFile?.type || "",
           },
           config
         );
@@ -229,7 +235,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
 
       toast.success("Message deleted");
 
-      // ✅ Emit the delete event to notify other clients
+      // Emit the delete event to notify other clients
       socket.emit("delete message", {
         messageId,
         chatId: selectedChat._id,
@@ -262,6 +268,73 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
     } catch (err) {
       toast.error("Edit failed");
     }
+  };
+
+  const handleFileUpload = async (file) => {
+    if (!file) return null;
+
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append(
+      "upload_preset",
+      process.env.REACT_APP_CLOUDINARY_UPLOAD_PRESET
+    ); // required
+
+    try {
+      const res = await fetch(process.env.REACT_APP_CLOUDINARY_UPLOAD_URL, {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await res.json();
+      if (data.error) {
+        throw new Error(data.error.message);
+      }
+
+      return { url: data.secure_url, type: file.type };
+    } catch (error) {
+      toast.error("File upload failed: " + error.message);
+      return null;
+    }
+  };
+
+  const handleAttachClick = async () => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "*/*";
+    input.onchange = async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const uploaded = await handleFileUpload(file);
+      if (!uploaded) return;
+
+      try {
+        const config = {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${user.token}`,
+          },
+        };
+
+        const { data } = await axios.post(
+          "/api/message",
+          {
+            content: "[file]",
+            chatId: selectedChat._id,
+            fileUrl: uploaded.url,
+            fileType: uploaded.type,
+          },
+          config
+        );
+
+        socket.emit("new message", data);
+        setMessages((prev) => [...prev, data]);
+      } catch (err) {
+        toast.error("Failed to send file");
+      }
+    };
+    input.click();
   };
 
   return (
@@ -376,7 +449,9 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
                   value={newMessage}
                   onKeyDown={sendMessage}
                 />
-
+                <IconButton onClick={handleAttachClick}>
+                  <IoAttach />
+                </IconButton>
                 <IconButton
                   size="sm"
                   colorScheme="teal"
