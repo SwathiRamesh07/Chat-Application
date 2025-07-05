@@ -90,8 +90,6 @@ const deleteMessage = async (req, res) => {
 };
 
 const updateMessage = asyncHandler(async (req, res) => {
-  // console.log("PUT /api/message/:id payload →", req.params.id, req.body);
-
   const { content } = req.body; // plaintext from client
   const message = await Message.findById(req.params.id);
 
@@ -102,13 +100,12 @@ const updateMessage = asyncHandler(async (req, res) => {
   message.content = encrypt(content); // re-encrypt
   await message.save();
 
-  // repopulate so the front-end gets the same shape as newMessage/sendMessage
   const fullMsg = await Message.findById(message._id)
     .populate("sender", "name pic")
     .populate("chat");
 
   // broadcast to everyone in that chat room
-  const io = req.app.get("io"); // we stored io on the app in server.js
+  const io = req.app.get("io");
   io.to(fullMsg.chat._id.toString()).emit("message edited", fullMsg);
 
   res.json(fullMsg);

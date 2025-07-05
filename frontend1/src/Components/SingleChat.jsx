@@ -404,30 +404,6 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
                 />
               </div>
             )}
-
-            {/* <Field.Root onKeyDown={sendMessage} marginTop={3} required>
-              {isTyping ? (
-                <div>
-                  <Lottie
-                    options={defaultOptions}
-                    height={40}
-                    width={71}
-                    style={{ marginBottom: 15, marginLeft: 0 }}
-                  />
-                </div>
-              ) : (
-                <></>
-              )}
-              <Input
-                ref={inputRef} //  hook up the ref
-                variant="subtle"
-                background="#E0E0E0"
-                placeholder={editingId ? "Edit message…" : "Enter a message…"}
-                onChange={typingHandler}
-                value={newMessage}
-              />
-            </Field.Root> */}
-
             <Field.Root onKeyDown={sendMessage} mt={3} required>
               {isTyping && (
                 <Lottie

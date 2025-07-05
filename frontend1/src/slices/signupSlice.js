@@ -1,7 +1,7 @@
-import { createSlice } from '@reduxjs/toolkit';
+import { createSlice } from "@reduxjs/toolkit";
 
 const signupSlice = createSlice({
-  name: 'signup',
+  name: "signup",
   initialState: {
     loading: false,
     user: null,
@@ -28,11 +28,7 @@ const signupSlice = createSlice({
   },
 });
 
-export const {
-  signupRequest,
-  signupSuccess,
-  signupFailure,
-  clearSignupState,
-} = signupSlice.actions;
+export const { signupRequest, signupSuccess, signupFailure, clearSignupState } =
+  signupSlice.actions;
 
 export default signupSlice.reducer;

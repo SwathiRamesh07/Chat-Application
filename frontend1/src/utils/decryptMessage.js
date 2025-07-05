@@ -11,7 +11,6 @@ const decryptMessage = (cipherText) => {
   } catch (error) {
     console.error("Decryption error:", error, "for cipherText:", cipherText);
     return "[Decryption failed]";
-    
   }
 };
 
